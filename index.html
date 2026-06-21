@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>haxrus.1337.cx // BREACH</title>
+<style>
+  :root{
+    --bg: #07090a;
+    --bg-panel: #0c1110;
+    --amber: #ffb000;
+    --amber-dim: #8a5e00;
+    --cyan: #5dfdf4;
+    --red: #ff3b4e;
+    --text-dim: #5c6b63;
+    --mono: "VT323", "Courier New", monospace;
+    --mono2: "Share Tech Mono", "Courier New", monospace;
+  }
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+
+  *{ box-sizing: border-box; }
+  html,body{
+    margin:0; padding:0; height:100%;
+    background: var(--bg);
+    color: var(--amber);
+    font-family: var(--mono2);
+    overflow: hidden;
+  }
+
+  .crt{
+    position:relative;
+    width:100%; height:100vh;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:flex-start;
+    padding: 24px 16px;
+  }
+
+  .crt::before{
+    content:"";
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.035) 0px,
+      rgba(255,255,255,0.035) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events:none;
+    z-index: 50;
+    mix-blend-mode: overlay;
+  }
+
+  .crt::after{
+    content:"";
+    position:absolute; inset:0;
+    box-shadow: inset 0 0 160px rgba(0,0,0,0.85);
+    pointer-events:none;
+    z-index: 51;
+    animation: flicker 6s infinite;
+  }
+
+  @keyframes flicker{
+    0%, 96%, 100% { opacity: 1; }
+    97% { opacity: 0.92; }
+    98% { opacity: 1; }
+  }
+
+  .topbar{
+    width:100%; max-width: 760px;
+    display:flex; justify-content:space-between;
+    font-size: 14px; letter-spacing: 1px;
+    color: var(--amber-dim);
+    border-bottom: 1px solid var(--amber-dim);
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+
+  .console{
+    width:100%; max-width: 760px;
+    background: var(--bg-panel);
+    border: 1px solid var(--amber-dim);
+    border-radius: 4px;
+    padding: 18px 20px;
+    box-shadow: 0 0 24px rgba(255,176,0,0.06);
+  }
+
+  h1{
+    font-family: var(--mono);
+    font-size: 38px;
+    letter-spacing: 2px;
+    margin: 0 0 4px 0;
+    text-shadow: 0 0 8px rgba(255,176,0,0.5);
+  }
+  h1 span{ color: var(--cyan); text-shadow: 0 0 8px rgba(93,253,244,0.6); }
+
+  .subtitle{
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+
+  #boot{
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    min-height: 90px;
+  }
+  .cursor{
+    display:inline-block;
+    width:8px; height:14px;
+    background: var(--amber);
+    animation: blink 1s steps(1) infinite;
+    vertical-align: -2px;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  #stage{
+    display:none;
+    width:100%;
+  }
+
+  .hud{
+    display:flex; justify-content:space-between;
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: var(--cyan);
+  }
+  .hud .danger{ color: var(--red); }
+
+  #field{
+    position: relative;
+    width: 100%;
+    height: 320px;
+    border: 1px dashed var(--amber-dim);
+    border-radius: 3px;
+    overflow: hidden;
+    background:
+      linear-gradient(transparent 0%, transparent 85%, rgba(255,59,78,0.08) 100%);
+  }
+
+  .word{
+    position: absolute;
+    font-size: 18px;
+    white-space: nowrap;
+    color: var(--amber-dim);
+  }
+  .word .matched{ color: var(--cyan); text-shadow: 0 0 6px rgba(93,253,244,0.6); }
+  .word.active{ color: var(--amber); }
+
+  #typed-line{
+    margin-top: 10px;
+    font-size: 16px;
+    color: var(--text-dim);
+    min-height: 20px;
+  }
+  #typed-line span{ color: var(--cyan); }
+
+  #start-btn, #retry-btn{
+    font-family: var(--mono2);
+    background: transparent;
+    color: var(--bg);
+    background-color: var(--amber);
+    border: none;
+    padding: 10px 18px;
+    font-size: 14px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border-radius: 2px;
+    margin-top: 12px;
+  }
+  #start-btn:hover, #retry-btn:hover{
+    background-color: var(--cyan);
+  }
+
+  #gameover{
+    display:none;
+    text-align:center;
+    padding: 30px 10px;
+  }
+  #gameover h2{
+    font-family: var(--mono);
+    font-size: 32px;
+    color: var(--red);
+    text-shadow: 0 0 10px rgba(255,59,78,0.6);
+    margin-bottom: 6px;
+  }
+  #score-line{ font-size: 16px; color: var(--amber); margin-bottom: 4px; }
+  #best-line{ font-size: 13px; color: var(--text-dim); }
+
+  .footer{
+    margin-top: 14px;
+    font-size: 11px;
+    color: var(--amber-dim);
+    letter-spacing: 1px;
+    text-align: center;
+  }
+
+  @media (max-width: 480px){
+    h1{ font-size: 28px; }
+    #field{ height: 260px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="crt">
+  <div class="topbar">
+    <span>HAXRUS://MAINFRAME</span>
+    <span id="clock">--:--:--</span>
+  </div>
+
+  <div class="console">
+    <h1>haxrus<span>.1337.cx</span></h1>
+    <div class="subtitle">unauthorized access point — claimed and operational</div>
+
+    <div id="boot"></div>
+
+    <div id="stage">
+      <div class="hud">
+        <span>BREACHED: <span id="score">0</span></span>
+        <span class="danger">INTEGRITY: <span id="integrity">100</span>%</span>
+      </div>
+      <div id="field"></div>
+      <div id="typed-line">&gt; <span id="typed"></span></div>
+    </div>
+
+    <div id="gameover">
+      <h2>CONNECTION TERMINATED</h2>
+      <div id="score-line">Files breached: 0</div>
+      <div id="best-line">Best run: 0</div>
+      <button id="retry-btn">RECONNECT</button>
+    </div>
+  </div>
+
+  <div class="footer">THIS NODE IS RESERVED // EST. 2026 // PRESS ANY KEY TO TYPE</div>
+</div>
+
+<script>
+(function(){
+  const bootEl = document.getElementById('boot');
+  const stage = document.getElementById('stage');
+  const field = document.getElementById('field');
+  const typedEl = document.getElementById('typed');
+  const scoreEl = document.getElementById('score');
+  const integrityEl = document.getElementById('integrity');
+  const gameoverEl = document.getElementById('gameover');
+  const scoreLine = document.getElementById('score-line');
+  const bestLine = document.getElementById('best-line');
+  const retryBtn = document.getElementById('retry-btn');
+  const clockEl = document.getElementById('clock');
+
+  function tickClock(){
+    const d = new Date();
+    clockEl.textContent = d.toTimeString().slice(0,8);
+  }
+  tickClock();
+  setInterval(tickClock, 1000);
+
+  const bootLines = [
+    "initializing uplink...",
+    "spoofing handshake... ok",
+    "locating node: haxrus.1337.cx ... found",
+    "ownership flag: SET",
+    "loading breach.exe",
+    "",
+    "type the falling strings before they hit the floor.",
+    "miss 5 and the connection drops.",
+    ""
+  ];
+
+  let bootIndex = 0, charIndex = 0;
+  function typeBoot(){
+    if(bootIndex >= bootLines.length){
+      bootEl.innerHTML += '<span class="cursor"></span>';
+      const startBtn = document.createElement('button');
+      startBtn.id = 'start-btn';
+      startBtn.textContent = 'INITIATE BREACH';
+      startBtn.onclick = startGame;
+      bootEl.parentNode.insertBefore(startBtn, document.getElementById('stage'));
+      return;
+    }
+    const line = bootLines[bootIndex];
+    if(charIndex <= line.length){
+      bootEl.innerHTML = bootLines.slice(0,bootIndex).join('\n') +
+        (bootIndex>0 ? '\n' : '') + line.slice(0,charIndex) + '<span class="cursor"></span>';
+      charIndex++;
+      setTimeout(typeBoot, 14 + Math.random()*20);
+    } else {
+      bootIndex++;
+      charIndex = 0;
+      setTimeout(typeBoot, 60);
+    }
+  }
+  typeBoot();
+
+  // ---- GAME ----
+  const WORDS = [
+    "sudo","rm -rf","0xDEAD","payload","firewall","exploit","keygen",
+    "rootkit","decrypt","botnet","ssh -i","grep -r","chmod 777",
+    "proxy","inject","bypass","token","shellcode","backdoor","leetcode",
+    "phish","spoof","brute","trace","null","init","kernel","daemon"
+  ];
+
+  let score = 0;
+  let integrity = 100;
+  let best = parseInt(localStorage.getItem('haxrus_best') || '0', 10);
+  let active = [];
+  let typedBuffer = "";
+  let spawnTimer = null;
+  let fallSpeed = 0.55; // px per frame baseline
+  let running = false;
+
+  function resetGame(){
+    score = 0; integrity = 100; typedBuffer = "";
+    scoreEl.textContent = score;
+    integrityEl.textContent = integrity;
+    typedEl.textContent = "";
+    field.innerHTML = "";
+    active = [];
+    fallSpeed = 0.55;
+  }
+
+  function startGame(){
+    document.getElementById('start-btn')?.remove();
+    bootEl.style.display = 'none';
+    gameoverEl.style.display = 'none';
+    stage.style.display = 'block';
+    resetGame();
+    running = true;
+    spawnWord();
+    requestAnimationFrame(loop);
+  }
+
+  function spawnWord(){
+    if(!running) return;
+    const text = WORDS[Math.floor(Math.random()*WORDS.length)];
+    const el = document.createElement('div');
+    el.className = 'word';
+    el.dataset.text = text;
+    el.dataset.matched = "0";
+    el.innerHTML = text;
+    const maxLeft = Math.max(10, field.clientWidth - (text.length*10) - 10);
+    el.style.left = Math.floor(Math.random()*maxLeft) + 'px';
+    el.style.top = '-20px';
+    field.appendChild(el);
+    active.push({ el, text, top: -20, matched: 0 });
+
+    const delay = Math.max(550, 1500 - score*15);
+    spawnTimer = setTimeout(spawnWord, delay);
+  }
+
+  function loop(){
+    if(!running) return;
+    const fieldH = field.clientHeight;
+    for(let i = active.length - 1; i >= 0; i--){
+      const w = active[i];
+      w.top += fallSpeed + score*0.01;
+      w.el.style.top = w.top + 'px';
+      if(w.top > fieldH - 16){
+        w.el.remove();
+        active.splice(i,1);
+        integrity -= 20;
+        integrityEl.textContent = Math.max(0, integrity);
+        if(integrity <= 0){ endGame(); return; }
+      }
+    }
+    requestAnimationFrame(loop);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if(!running) return;
+    if(e.key === 'Backspace'){
+      typedBuffer = typedBuffer.slice(0,-1);
+    } else if(e.key.length === 1){
+      typedBuffer += e.key;
+    } else {
+      return;
+    }
+    typedEl.textContent = typedBuffer;
+    updateMatches();
+  });
+
+  function updateMatches(){
+    let hit = null;
+    for(const w of active){
+      if(w.text.startsWith(typedBuffer) && typedBuffer.length > 0){
+        w.el.innerHTML = '<span class="matched">' + w.text.slice(0,typedBuffer.length) +
+          '</span>' + w.text.slice(typedBuffer.length);
+        w.el.classList.add('active');
+        if(typedBuffer === w.text){ hit = w; }
+      } else {
+        w.el.innerHTML = w.text;
+        w.el.classList.remove('active');
+      }
+    }
+    if(hit){
+      hit.el.remove();
+      active = active.filter(w => w !== hit);
+      score++;
+      scoreEl.textContent = score;
+      typedBuffer = "";
+      typedEl.textContent = "";
+      if(score % 8 === 0){ fallSpeed += 0.12; }
+    }
+  }
+
+  function endGame(){
+    running = false;
+    clearTimeout(spawnTimer);
+    stage.style.display = 'none';
+    gameoverEl.style.display = 'block';
+    if(score > best){
+      best = score;
+      localStorage.setItem('haxrus_best', best);
+    }
+    scoreLine.textContent = 'Files breached: ' + score;
+    bestLine.textContent = 'Best run: ' + best;
+  }
+
+  retryBtn.addEventListener('click', startGame);
+})();
+</script>
+
+</body>
+</html>
